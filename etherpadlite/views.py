@@ -245,7 +245,11 @@ def pad(request, pk):
 
     # Delete the existing session first
     if ('padSessionID' in request.COOKIES):
-        epclient.deleteSession(request.COOKIES['sessionID'])
+        try:
+            epclient.deleteSession(request.COOKIES['sessionID'])
+        except ValueError, e:
+            # sessionID not found, i.e. we needn't do anything, it's already gone
+            pass
         response.delete_cookie('sessionID', server.hostname)
         response.delete_cookie('padSessionID')
 
