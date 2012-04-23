@@ -187,6 +187,27 @@ def pad(request, pk):
     )
     epclient = EtherpadLiteClient(pad.server.apikey, pad.server.apiurl)
 
+    default_etherpad_settings = {
+        "showControls": True,
+        "showChat": True,
+        "alwaysShowChat": False,
+        "showLineNumbers": False,
+        "useMonospaceFont": False,
+        "noColors": False,
+        "hideQRCode": True,
+        "rtl": False,
+        "userName": author.user.__unicode__(),
+    }
+
+    pad_settings = default_etherpad_settings
+    pad_settings.update(getattr(settings, 'ETHERPAD_SETTINGS', {}))
+
+    for key, value in pad_settings.items():
+        if value == True:
+            pad_settings[key] = 'true'
+        elif value == False:
+            pad_settings[key] = 'false'
+
     try:
         result = epclient.createSession(
             pad.group.groupID,
@@ -200,7 +221,7 @@ def pad(request, pk):
                 'pad': pad,
                 'link': padLink,
                 'server': server,
-                'uname': author.user.__unicode__(),
+                'querystring': urllib.urlencode(pad_settings).replace('+', ' '),
                 'error': _('etherpad-lite session request returned:') +
                 ' "' + e.reason + '"'
             },
@@ -215,7 +236,7 @@ def pad(request, pk):
             'pad': pad,
             'link': padLink,
             'server': server,
-            'uname': author.user.__unicode__(),
+            'querystring': urllib.urlencode(pad_settings).replace('+', ' '),
             'error': False
         },
         context_instance=RequestContext(request)
