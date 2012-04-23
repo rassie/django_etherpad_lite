@@ -162,8 +162,6 @@ def pad(request, pk):
 
     # Initialize some needed values
     pad = get_object_or_404(Pad, pk=pk)
-    padLink = pad.server.url + 'p/' + pad.group.groupID + '$' + \
-        urllib.quote_plus(pad.name)
     server = urlparse(pad.server.url)
     author = PadAuthor.objects.get(user=request.user)
 
@@ -172,7 +170,7 @@ def pad(request, pk):
             'etherpad-lite/pad.html',
             {
                 'pad': pad,
-                'link': padLink,
+                'link': pad.link,
                 'server': server,
                 'uname': author.user.__unicode__(),
                 'error': _('You are not allowed to view or edit this pad')
@@ -219,7 +217,7 @@ def pad(request, pk):
             'etherpad-lite/pad.html',
             {
                 'pad': pad,
-                'link': padLink,
+                'link': pad.link,
                 'server': server,
                 'querystring': urllib.urlencode(pad_settings).replace('+', ' '),
                 'error': _('etherpad-lite session request returned:') +
@@ -234,7 +232,7 @@ def pad(request, pk):
         'etherpad-lite/pad.html',
         {
             'pad': pad,
-            'link': padLink,
+            'link': pad.link,
             'server': server,
             'querystring': urllib.urlencode(pad_settings).replace('+', ' '),
             'error': False

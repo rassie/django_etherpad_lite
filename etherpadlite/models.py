@@ -4,6 +4,8 @@ from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from py_etherpad import EtherpadLiteClient
+
+import urllib
 import types
    
 
@@ -159,6 +161,10 @@ class Pad(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def link(self):
+        return "%sp/%s" % (self.server.url, urllib.quote_plus(self.padid))
 
     @property
     def padid(self):
