@@ -197,7 +197,7 @@ def pad(request, pk):
         "noColors": False,
         "hideQRCode": True,
         "rtl": False,
-        "userName": author_name_mapper(author.user),
+        "userName": author_name_mapper(author.user).encode('utf-8'),
     }
 
     pad_settings = default_etherpad_settings
