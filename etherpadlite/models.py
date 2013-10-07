@@ -2,8 +2,10 @@ from django.db import models
 from django.db.models.signals import pre_delete
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext_lazy as _
-
+from django.conf import settings
 from py_etherpad import EtherpadLiteClient
+import types
+   
 
 import string
 import random
@@ -58,10 +60,14 @@ class PadGroup(models.Model):
         return ''.join(random.choice(chars) for x in range(size))    
 
     def EtherMap(self):
-        result = self.epclient.createGroupIfNotExistsFor(
-            self.group.__unicode__() + self._get_random_id() +
-            self.group.id.__str__()
-        )
+
+        default_group_mapper = lambda self: self.group.__unicode__() + self._get_random_id() + self.group.id.__str__()
+        group_mapper = getattr(settings, 'ETHERPAD_GROUP_MAPPER', default_group_mapper)
+
+        if not isinstance(group_mapper, types.FunctionType):
+            group_mapper = default_group_mapper
+
+        result = self.epclient.createGroupIfNotExistsFor(group_mapper(self))
         self.groupID = result['groupID']
         return result
 
@@ -74,7 +80,6 @@ class PadGroup(models.Model):
         # First find and delete all associated pads
         Pad.objects.filter(group=self).delete()
         return self.epclient.deleteGroup(self.groupID)
-
 
 def padGroupDel(sender, **kwargs):
     """Make sure groups are purged from etherpad when deleted
@@ -117,10 +122,16 @@ class PadAuthor(models.Model):
         return self.user.__unicode__()
 
     def EtherMap(self):
+        default_author_name_mapper = lambda user: user.__unicode__()
+        author_name_mapper = getattr(settings, 'ETHERPAD_AUTHOR_NAME_MAPPER', default_author_name_mapper)
+
+        if not isinstance(author_name_mapper, types.FunctionType):
+            author_name_mapper = default_author_name_mapper
+
         epclient = EtherpadLiteClient(self.server.apikey, self.server.apiurl)
         result = epclient.createAuthorIfNotExistsFor(
             self.user.id.__str__(),
-            name=self.__unicode__()
+            name=author_name_mapper(self.user)
         )
         self.authorID = result['authorID']
         return result
@@ -138,7 +149,6 @@ class PadAuthor(models.Model):
     def save(self, *args, **kwargs):
         self.EtherMap()
         super(PadAuthor, self).save(*args, **kwargs)
-
 
 class Pad(models.Model):
     """Schema and methods for etherpad-lite pads
