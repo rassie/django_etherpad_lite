@@ -1,7 +1,7 @@
-from django.conf.urls.defaults import patterns, url
-
-from etherpadlite.models import *
-
+try:
+    from django.conf.urls import patterns, url
+except: # Django < 1.5
+    from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns(
     '',
