@@ -256,7 +256,7 @@ def pad(request, pk):
     response.set_cookie(
         'sessionID',
         value=result['sessionID'],
-        expires=expires,
+        max_age=None,
         httponly=False
     )
     return response
